@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "aksmanager",
+  "version": "${version}",
+  "name": "Aksmanager",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/aksmanager/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "org.tnnova.aksmanager.aksmanager.client.AksmanagerClient"
+    ],
+    "main": [
+      "org.tnnova.aksmanager.aksmanager.Aksmanager"
+    ]
+  },
+  "mixins": [
+    "aksmanager.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.12",
+    "fabric": "*",
+    "minecraft": "1.19.3"
+  }
+}
