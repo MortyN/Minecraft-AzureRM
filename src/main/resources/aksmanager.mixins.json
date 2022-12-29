@@ -1,9 +1,10 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "org.tnnova.aksmanager.aksmanager.mixin",
+  "package": "org.tnnova.aksmanager.aksmanager.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "AzureButtonBlock"
   ],
   "client": [
   ],

@@ -9,29 +9,42 @@ import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Subscription;
 import net.fabricmc.api.ModInitializer;
 
+import net.minecraft.nbt.NbtCompound;
+
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
-import net.minecraft.util.Clearable;
-import net.minecraft.util.Formatting;
+import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import org.tnnova.aksmanager.aksmanager.models.AzureButtonPos;
+import org.tnnova.aksmanager.aksmanager.models.AzureButtonPosList;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Aksmanager implements ModInitializer {
-
+    public static final Block EXAMPLE_BLOCK = new Block(FabricBlockSettings.of(Material.METAL).strength(4.0f));
     private DeviceCodeCredential deviceCodeCredential;
 
     public DeviceCodeCredential getDeviceCodeCredentialWithMsg(ServerCommandSource player) {
@@ -85,8 +98,13 @@ public class Aksmanager implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        MinecraftClient mc = MinecraftClient.getInstance();
 
+        MinecraftClient mc = MinecraftClient.getInstance();
+        AzureButtonPos azureButtonPos = null;
+        AzureButtonPosList azureButtonPosArrayList = new AzureButtonPosList();
+
+        Registry.register(Registries.BLOCK, new Identifier("tutorial", "example_block"), EXAMPLE_BLOCK);
+        Registry.register(Registries.ITEM, new Identifier("tutorial", "example_block"), new BlockItem(EXAMPLE_BLOCK, new FabricItemSettings()));
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogin")
                 .executes(context -> {
@@ -100,20 +118,24 @@ public class Aksmanager implements ModInitializer {
 
                     PagedIterable<Subscription> subList = azure.subscriptions().list();
 
+                    World world = mc.getServer().getOverworld();
+
                     AtomicInteger i = new AtomicInteger();
 
+                    BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1,0,0);
+                    mc.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
+
                     subList.forEach((e)-> {
-                        context.getSource().getPlayer().sendMessage(Text.literal(e.displayName()));
-                        BlockPos bpos = context.getSource().getPlayer().getBlockPos().add(i.get(),0,0);
-                        mc.getServer().getOverworld().setBlockState(bpos, Blocks.OAK_SIGN.getDefaultState());
-                        BlockEntity be = mc.getServer().getOverworld().getBlockEntity(bpos);
-                        if (be instanceof SignBlockEntity) {
-                            SignBlockEntity sign = (SignBlockEntity) be;
-                            // Set the NBT data for the sign
-                            sign.setTextOnRow(1, Text.literal(e.displayName()));
-                            // Mark the sign as dirty so that it is saved and updated in the world
-                            sign.markDirty();
-                        }
+                        NbtCompound compound = new NbtCompound();
+                        compound.putString(e.displayName(),e.subscriptionId());
+                        Inventory inventory = ((ChestBlockEntity) mc.getServer().getOverworld().getBlockEntity(blockPos));
+
+                        //Test with: /data get entity @s SelectedItem
+                        ItemStack tripWireKey = new ItemStack(Items.TRIPWIRE_HOOK, 1);
+                        tripWireKey.setNbt(compound);
+                        tripWireKey.setCustomName(Text.literal(e.displayName()));
+                        inventory.setStack(i.intValue(), tripWireKey);
+
                         i.getAndIncrement();
                     });
                     return 1;
@@ -169,18 +191,20 @@ public class Aksmanager implements ModInitializer {
 
 
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("signplace")
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("createchest")
                 .executes(context -> {
                     // For versions below 1.19, replace "Text.literal" with "new LiteralText".
-                    mc.getServer().getOverworld().setBlockState(context.getSource().getPlayer().getBlockPos(), Blocks.OAK_SIGN.getDefaultState(), 2);
-                    BlockEntity be = mc.getServer().getOverworld().getBlockEntity(context.getSource().getPlayer().getBlockPos());
-                    if (be instanceof SignBlockEntity) {
-                        SignBlockEntity sign = (SignBlockEntity) be;
-                        // Set the NBT data for the sign
-                        sign.setTextOnRow(1, Text.literal("HELLO WORLD"));
-                        // Mark the sign as dirty so that it is saved and updated in the world
-                        sign.markDirty();
-                    }
+                    BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1,0,0);
+                    mc.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
+                    NbtCompound compound = new NbtCompound();
+                    compound.putString("d-nexp-sub","e9b12c4f-b4b6-4e5b-94ab-032824a151ba");
+                    Inventory inventory = ((ChestBlockEntity) mc.getServer().getOverworld().getBlockEntity(blockPos));
+
+                    // Add 3 oak wood to the chest
+                    ItemStack oakWood = new ItemStack(Items.OAK_PLANKS, 3);
+                    oakWood.setNbt(compound);
+                    inventory.setStack(1, oakWood);
+
                     return 1;
                 })));
     }
