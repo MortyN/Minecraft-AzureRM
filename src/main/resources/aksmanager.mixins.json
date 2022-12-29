@@ -4,7 +4,7 @@
   "package": "org.tnnova.aksmanager.aksmanager.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "AzureButtonBlock"
+    "VillagerMixin"
   ],
   "client": [
   ],

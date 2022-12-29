@@ -9,42 +9,39 @@ import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Subscription;
 import net.fabricmc.api.ModInitializer;
 
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.nbt.NbtCompound;
 
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.ChestBlockEntity;
-import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
+import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.World;
-import org.tnnova.aksmanager.aksmanager.models.AzureButtonPos;
+import org.tnnova.aksmanager.aksmanager.models.AzureMan;
 import org.tnnova.aksmanager.aksmanager.models.AzureButtonPosList;
 
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Aksmanager implements ModInitializer {
-    public static final Block EXAMPLE_BLOCK = new Block(FabricBlockSettings.of(Material.METAL).strength(4.0f));
+
+    public static final String SUBSCRIPTIONID = "subId";
     private DeviceCodeCredential deviceCodeCredential;
 
     public DeviceCodeCredential getDeviceCodeCredentialWithMsg(ServerCommandSource player) {
@@ -69,8 +66,13 @@ public class Aksmanager implements ModInitializer {
                 }).build();
     }
 
-    PlayerEntity getPlayer(MinecraftClient mc) {
-        return Objects.requireNonNull(mc.player, "Player is null");
+    public static void spawnVillager(World world, BlockPos pos) {
+        VillagerEntity villager = EntityType.VILLAGER.create(world);
+        villager.setPosition(pos.getX(), pos.getY(), pos.getZ());
+        villager.setVillagerData(villager.getVillagerData().withProfession(VillagerProfession.NITWIT));
+        villager.setCustomName(Text.literal("Azure Man"));
+        villager.setPersistent();
+        world.spawnEntity(villager);
     }
 
     void setClientServerBlockState(MinecraftClient mc, BlockPos blockPos, BlockState blockState) {
@@ -100,11 +102,7 @@ public class Aksmanager implements ModInitializer {
     public void onInitialize() {
 
         MinecraftClient mc = MinecraftClient.getInstance();
-        AzureButtonPos azureButtonPos = null;
-        AzureButtonPosList azureButtonPosArrayList = new AzureButtonPosList();
-
-        Registry.register(Registries.BLOCK, new Identifier("tutorial", "example_block"), EXAMPLE_BLOCK);
-        Registry.register(Registries.ITEM, new Identifier("tutorial", "example_block"), new BlockItem(EXAMPLE_BLOCK, new FabricItemSettings()));
+        AzureMan azureMan = new AzureMan();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogin")
                 .executes(context -> {
@@ -116,9 +114,13 @@ public class Aksmanager implements ModInitializer {
                     AzureResourceManager.Authenticated azure = AzureResourceManager
                             .authenticate(deviceCodeCredential, profile);
 
+                    azureMan.setAzureResourceManager(azure);
+
                     PagedIterable<Subscription> subList = azure.subscriptions().list();
 
                     World world = mc.getServer().getOverworld();
+
+                    azureMan.setWorld(world);
 
                     AtomicInteger i = new AtomicInteger();
 
@@ -127,7 +129,7 @@ public class Aksmanager implements ModInitializer {
 
                     subList.forEach((e)-> {
                         NbtCompound compound = new NbtCompound();
-                        compound.putString(e.displayName(),e.subscriptionId());
+                        compound.putString(Aksmanager.SUBSCRIPTIONID,e.subscriptionId());
                         Inventory inventory = ((ChestBlockEntity) mc.getServer().getOverworld().getBlockEntity(blockPos));
 
                         //Test with: /data get entity @s SelectedItem
@@ -138,6 +140,7 @@ public class Aksmanager implements ModInitializer {
 
                         i.getAndIncrement();
                     });
+                    spawnVillager(mc.getServer().getOverworld(), blockPos.add(0,1,0));
                     return 1;
                 })));
 
@@ -175,10 +178,6 @@ public class Aksmanager implements ModInitializer {
                     Integer platformHeightInBlocksY = 200;
                     Integer platformLengthInBlocksZ = 200;
 
-
-
-
-
                     Vec3d centerOfPlatform = new Vec3d(playerPos.x + (platformLengthInBlocksX.floatValue() / 2), platformHeightInBlocksY + 1, playerPos.z + (platformLengthInBlocksZ.floatValue() / 2));
 
                     BlockPos platformPosVec3Dd = new BlockPos(player.getX(), platformHeightInBlocksY, player.getZ());
@@ -188,24 +187,24 @@ public class Aksmanager implements ModInitializer {
                     return 1;
                 })));
 
-
-
-
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("createchest")
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("sheepspawn")
                 .executes(context -> {
-                    // For versions below 1.19, replace "Text.literal" with "new LiteralText".
-                    BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1,0,0);
-                    mc.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
-                    NbtCompound compound = new NbtCompound();
-                    compound.putString("d-nexp-sub","e9b12c4f-b4b6-4e5b-94ab-032824a151ba");
-                    Inventory inventory = ((ChestBlockEntity) mc.getServer().getOverworld().getBlockEntity(blockPos));
+                    SheepEntity sheep = new SheepEntity(EntityType.SHEEP ,mc.getServer().getOverworld());
+                    Vec3d playerPos = context.getSource().getPlayer().getPos();
+                    sheep.updatePosition(context.getSource().getPlayer().getX(), context.getSource().getPlayer().getY(), context.getSource().getPlayer().getZ());
+                    sheep.setColor(DyeColor.GREEN);
+                    sheep.setCustomName(Text.literal("moo, im a sheep"));
 
-                    // Add 3 oak wood to the chest
-                    ItemStack oakWood = new ItemStack(Items.OAK_PLANKS, 3);
-                    oakWood.setNbt(compound);
-                    inventory.setStack(1, oakWood);
+                    if (context.getSource().getWorld().isClient()){
+                        context.getSource().getPlayer().sendMessage(Text.literal("spawned by player"));
+                    }
 
+                    mc.getServer().getOverworld().spawnEntity(sheep);
                     return 1;
                 })));
+
+
+
+
     }
 }
