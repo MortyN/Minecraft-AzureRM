@@ -11,14 +11,14 @@ import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.SheepEntity;
-import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.passive.WanderingTraderEntity;
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
 
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
@@ -31,10 +31,8 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
-import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.World;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
-import org.tnnova.aksmanager.aksmanager.models.AzureButtonPosList;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,32 +64,23 @@ public class Aksmanager implements ModInitializer {
                 }).build();
     }
 
-    public static void spawnVillager(World world, BlockPos pos) {
-        VillagerEntity villager = EntityType.VILLAGER.create(world);
-        villager.setPosition(pos.getX(), pos.getY(), pos.getZ());
-        villager.setVillagerData(villager.getVillagerData().withProfession(VillagerProfession.NITWIT));
-        villager.setCustomName(Text.literal("Azure Man"));
-        villager.setPersistent();
-        world.spawnEntity(villager);
-    }
-
+/*
     void setClientServerBlockState(MinecraftClient mc, BlockPos blockPos, BlockState blockState) {
         World overworldServer = mc.getServer().getOverworld();
-        World overworldClient = mc.getServer().getOverworld();
 
         if (overworldServer != null) {
             BlockEntity blockEntity = overworldServer.getBlockEntity(blockPos);
             Clearable.clear(blockEntity);
             //2 = update clients
             overworldServer.setBlockState(blockPos, blockState, 2);
-            overworldClient.updateNeighbors(blockPos, blockState.getBlock());
         }
     }
+*/
 
     void createPlatformAtPos(MinecraftClient mc, BlockPos blockPos, Integer xAxisLength, Integer zAxisLength) {
         for (int i = 0; i < xAxisLength; i++) {
             for (int j = 0; j < zAxisLength; j++) {
-                setClientServerBlockState(mc, blockPos.add(i, 0, j), Blocks.COBBLESTONE.getDefaultState());
+                mc.getServer().getOverworld().setBlockState(blockPos, Blocks.COBBLESTONE.getDefaultState(), Block.NOTIFY_LISTENERS);
             }
         }
         System.out.printf("X: %d, Y: %d, Z: %d\n", blockPos.getX(), blockPos.getY(), blockPos.getZ());
@@ -138,33 +127,13 @@ public class Aksmanager implements ModInitializer {
                         tripWireKey.setCustomName(Text.literal(e.displayName()));
                         inventory.setStack(i.intValue(), tripWireKey);
 
+
                         i.getAndIncrement();
                     });
-                    spawnVillager(mc.getServer().getOverworld(), blockPos.add(0,1,0));
+                    WanderingTraderEntity wanderingTraderEntity = Utils.spawnAzureMan(mc.getServer().getOverworld(), blockPos.add(0,1,0));
+                    AzureMan.setWanderingTraderEntity(wanderingTraderEntity);
                     return 1;
                 })));
-
-       /* CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("listsubs")
-                .executes(context -> {
-                    AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
-                    AzureResourceManager azure = AzureResourceManager
-                            .authenticate(deviceCodeCredential, profile).withSubscription(profile.getSubscriptionId());
-                    PagedIterable<Subscription> subList = azure.subscriptions().list();
-
-*//*
-                    VirtualMachineScaleSetsClient vmss = azure.virtualMachines().manager().serviceClient().getVirtualMachineScaleSets();
-*//*
-
-*//*
-                    PagedIterable<VirtualMachineScaleSetInner> list = vmss.list();
-*//*
-
-
-                    subList.forEach((e) -> {
-                        mc.player.sendMessage(Text.literal(e.displayName()));
-                    });
-                    return 1;
-                })));*/
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogins")
                 .executes(context -> {
