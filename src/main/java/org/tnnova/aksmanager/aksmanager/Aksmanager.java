@@ -8,6 +8,11 @@ import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Subscription;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
 import net.minecraft.nbt.NbtCompound;
 
 import static net.minecraft.server.command.CommandManager.*;
@@ -20,9 +25,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
 
 import java.util.Objects;
@@ -57,8 +66,16 @@ public class Aksmanager implements ModInitializer {
     }
 
 
+    public static final EntityType<AzureSheep> AZURE_SHEEP_ENTITY_TYPE = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier("azureentity", "sheep"),
+            FabricEntityTypeBuilder.create(SpawnGroup.AMBIENT, AzureSheep::new).dimensions(EntityDimensions.fixed(0.9f, 1.3f)).build()
+    );
+
     @Override
     public void onInitialize() {
+
+        FabricDefaultAttributeRegistry.register(AZURE_SHEEP_ENTITY_TYPE, AzureSheep.createMobAttributes());
 
         MinecraftClient mc = MinecraftClient.getInstance();
 

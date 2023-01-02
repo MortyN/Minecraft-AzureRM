@@ -1,34 +1,19 @@
 package org.tnnova.aksmanager.aksmanager.mixins;
 
-import com.azure.core.management.AzureEnvironment;
-import com.azure.core.management.profile.AzureProfile;
-import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSets;
 import com.azure.resourcemanager.containerservice.models.KubernetesClusters;
-import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.passive.BeeEntity;
-import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.scoreboard.*;
-import net.minecraft.server.command.EffectCommand;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DyeColor;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
-import net.minecraft.world.WanderingTraderManager;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.tnnova.aksmanager.aksmanager.Aksmanager;
 import org.tnnova.aksmanager.aksmanager.Utils;
+import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
 
 import java.util.ArrayList;
@@ -90,12 +76,12 @@ public abstract class WanderingTraderMixin {
                             vmsselement.virtualMachines().list().forEach((instance) -> {
                                 DyeColor sheepPowerState = Utils.updateVmProvisioningStateSheepColor(instance.powerState());
 
-                                SheepEntity sheep = new SheepEntity(EntityType.SHEEP , world);
+                                AzureSheep sheep = new AzureSheep(Aksmanager.AZURE_SHEEP_ENTITY_TYPE, world);
                                 sheep.updatePosition(player.getX(), player.getY(), player.getZ());
                                 sheep.setColor(sheepPowerState);
                                 sheep.setCustomName(Text.literal(instance.computerName()));
                                 sheep.attachLeash(villagerEntity, true);
-
+                                sheep.setVirtualMachineScaleSetVM(instance);
                                 world.spawnEntity(sheep);
                             });
                         }

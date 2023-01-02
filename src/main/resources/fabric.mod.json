@@ -9,6 +9,12 @@
   "license": "MIT",
   "icon": "assets/aksmanager/icon.png",
   "environment": "*",
+  "entities": [
+    {
+      "name": "azure_sheep",
+      "factory": "org.tnnova.aksmanager.aksmanager.entities.AzureSheep"
+    }
+  ],
   "entrypoints": {
     "client": [
       "org.tnnova.aksmanager.aksmanager.client.AksmanagerClient"
