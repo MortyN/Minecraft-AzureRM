@@ -14,17 +14,10 @@ public class AzureMan {
 
     public static World world;
 
-    public static WanderingTraderEntity wanderingTraderEntity;
-
     public AzureMan() {}
 
     public void setAzureResourceManager(AzureResourceManager.Authenticated azureResourceManager) {
         AzureMan.azureResourceManager = azureResourceManager;
-    }
-
-
-    public static void setWanderingTraderEntity(WanderingTraderEntity wanderingTraderEntity) {
-        AzureMan.wanderingTraderEntity = wanderingTraderEntity;
     }
 
     public void setWorld(World world) {

@@ -1,5 +1,6 @@
 package org.tnnova.aksmanager.aksmanager.mixins;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -9,6 +10,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,6 +26,12 @@ public abstract class VillagerMixin {
 
     @Shadow public abstract VillagerData getVillagerData();
 
+    public VillagerMixin(EntityType<? extends VillagerEntity> type, World world, boolean spawnedByMod) {
+        this.spawnedByMod = spawnedByMod;
+    }
+
+
+    private boolean spawnedByMod = false;
     @Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
     public void interactMob(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> ci) {
         if (!player.world.isClient()) return;

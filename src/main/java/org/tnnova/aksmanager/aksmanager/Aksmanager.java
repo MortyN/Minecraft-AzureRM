@@ -4,15 +4,10 @@ import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
 import com.azure.identity.DeviceCodeCredential;
-import com.azure.identity.DeviceCodeCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Subscription;
 import net.fabricmc.api.ModInitializer;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.SheepEntity;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
 
 import static net.minecraft.server.command.CommandManager.*;
@@ -25,11 +20,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
-import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
@@ -40,29 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Aksmanager implements ModInitializer {
 
     public static final String SUBSCRIPTIONID = "subId";
+    public static final String OWNEDBYAKSMANAGER = "ownedbyaksmanager";
     private DeviceCodeCredential deviceCodeCredential;
-
-    public DeviceCodeCredential getDeviceCodeCredentialWithMsg(ServerCommandSource player) {
-        return new DeviceCodeCredentialBuilder()
-                .challengeConsumer(challenge -> {
-                    // Lets the user know about the challenge.
-                    String deviceCodeCredentialMessage = challenge.getMessage();
-                    String deviceCodeCredentialUrl = challenge.getVerificationUrl();
-                    String deviceCodeCredentialUserCode = challenge.getUserCode();
-
-                    player.sendMessage(Text.literal(deviceCodeCredentialMessage));
-                    player.sendMessage(Text.literal("Click Here to Copy User Code!").styled(style -> style
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(deviceCodeCredentialMessage)))
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, deviceCodeCredentialUserCode))
-                            .withColor(Formatting.BLUE)
-                            .withBold(true)));
-                    player.sendMessage(Text.literal("Click Here for Azure Login!").styled(style -> style
-                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(deviceCodeCredentialMessage)))
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, deviceCodeCredentialUrl))
-                            .withColor(Formatting.AQUA)
-                            .withBold(true)));
-                }).build();
-    }
 
 /*
     void setClientServerBlockState(MinecraftClient mc, BlockPos blockPos, BlockState blockState) {
@@ -91,12 +61,12 @@ public class Aksmanager implements ModInitializer {
     public void onInitialize() {
 
         MinecraftClient mc = MinecraftClient.getInstance();
-        AzureMan azureMan = new AzureMan();
 
+        AzureMan azureMan = new AzureMan();
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogin")
                 .executes(context -> {
 
-                    deviceCodeCredential = getDeviceCodeCredentialWithMsg(context.getSource());
+                    deviceCodeCredential = Utils.getDeviceCodeCredentialWithMsg(context.getSource().getPlayer());
 
                     AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
                     //<T>.Authenticated is to get non subscription scoped resources, such as subscriptions themselves without providing withSubscriptionId
@@ -127,11 +97,9 @@ public class Aksmanager implements ModInitializer {
                         tripWireKey.setCustomName(Text.literal(e.displayName()));
                         inventory.setStack(i.intValue(), tripWireKey);
 
-
                         i.getAndIncrement();
                     });
-                    WanderingTraderEntity wanderingTraderEntity = Utils.spawnAzureMan(mc.getServer().getOverworld(), blockPos.add(0,1,0));
-                    AzureMan.setWanderingTraderEntity(wanderingTraderEntity);
+                    Utils.spawnAzureMan(mc.getServer().getOverworld(), blockPos.add(0,1,0));
                     return 1;
                 })));
 
@@ -155,25 +123,6 @@ public class Aksmanager implements ModInitializer {
 
                     return 1;
                 })));
-
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("sheepspawn")
-                .executes(context -> {
-                    SheepEntity sheep = new SheepEntity(EntityType.SHEEP ,mc.getServer().getOverworld());
-                    Vec3d playerPos = context.getSource().getPlayer().getPos();
-                    sheep.updatePosition(context.getSource().getPlayer().getX(), context.getSource().getPlayer().getY(), context.getSource().getPlayer().getZ());
-                    sheep.setColor(DyeColor.GREEN);
-                    sheep.setCustomName(Text.literal("moo, im a sheep"));
-
-                    if (context.getSource().getWorld().isClient()){
-                        context.getSource().getPlayer().sendMessage(Text.literal("spawned by player"));
-                    }
-
-                    mc.getServer().getOverworld().spawnEntity(sheep);
-                    return 1;
-                })));
-
-
-
 
     }
 }

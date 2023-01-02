@@ -26,7 +26,7 @@ public class LeashMixin {
 
     @Inject(method = "detachLeash", at = @At("HEAD"), cancellable = true)
     public void detachLeash(boolean sendPacket, boolean dropItem, CallbackInfo ci) {
-        if (this.holdingEntity.getType() == EntityType.VILLAGER){
+        if (this.holdingEntity != null && this.holdingEntity.getType() == EntityType.VILLAGER){
             return;
         }
 
