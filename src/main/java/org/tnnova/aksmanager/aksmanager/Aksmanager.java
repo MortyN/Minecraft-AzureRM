@@ -43,19 +43,6 @@ public class Aksmanager implements ModInitializer {
     public static final String OWNEDBYAKSMANAGER = "ownedbyaksmanager";
     private DeviceCodeCredential deviceCodeCredential;
 
-/*
-    void setClientServerBlockState(MinecraftClient mc, BlockPos blockPos, BlockState blockState) {
-        World overworldServer = mc.getServer().getOverworld();
-
-        if (overworldServer != null) {
-            BlockEntity blockEntity = overworldServer.getBlockEntity(blockPos);
-            Clearable.clear(blockEntity);
-            //2 = update clients
-            overworldServer.setBlockState(blockPos, blockState, 2);
-        }
-    }
-*/
-
     void createPlatformAtPos(MinecraftClient mc, BlockPos blockPos, Integer xAxisLength, Integer zAxisLength) {
         for (int i = 0; i < xAxisLength; i++) {
             for (int j = 0; j < zAxisLength; j++) {
@@ -100,12 +87,12 @@ public class Aksmanager implements ModInitializer {
 
                     AtomicInteger i = new AtomicInteger();
 
-                    BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1,0,0);
+                    BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1, 0, 0);
                     mc.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
 
-                    subList.forEach((e)-> {
+                    subList.forEach((e) -> {
                         NbtCompound compound = new NbtCompound();
-                        compound.putString(Aksmanager.SUBSCRIPTIONID,e.subscriptionId());
+                        compound.putString(Aksmanager.SUBSCRIPTIONID, e.subscriptionId());
                         Inventory inventory = ((ChestBlockEntity) mc.getServer().getOverworld().getBlockEntity(blockPos));
 
                         //Test with: /data get entity @s SelectedItem
@@ -116,11 +103,12 @@ public class Aksmanager implements ModInitializer {
 
                         i.getAndIncrement();
                     });
-                    Utils.spawnAzureMan(mc.getServer().getOverworld(), blockPos.add(0,1,0));
+                    Utils.spawnAzureMan(mc.getServer().getOverworld(), blockPos.add(0, 1, 0));
+
                     return 1;
                 })));
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogins")
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("createplatform")
                 .executes(context -> {
                     // For versions below 1.19, replace "Text.literal" with "new LiteralText".
 

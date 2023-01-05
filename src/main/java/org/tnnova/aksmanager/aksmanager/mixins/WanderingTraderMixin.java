@@ -1,6 +1,8 @@
 package org.tnnova.aksmanager.aksmanager.mixins;
 
+import com.azure.resourcemanager.compute.models.PowerState;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSets;
+import com.azure.resourcemanager.containerservice.models.Code;
 import com.azure.resourcemanager.containerservice.models.KubernetesClusters;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.EntityType;
@@ -10,9 +12,12 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.visitor.NbtTextFormatter;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DyeColor;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,31 +63,41 @@ public abstract class WanderingTraderMixin {
 
             Thread thread = new Thread(() -> {
                 VirtualMachineScaleSets vmss = AzureMan.azureResourceManager.withSubscription(subId).virtualMachineScaleSets();
-
                 KubernetesClusters clusters = AzureMan.azureResourceManager.withSubscription(subId).kubernetesClusters();
+                AzureMan.setKubernetesClusters(clusters);
+                AzureMan.setVirtualMachineScaleSets(vmss);
+
                 ArrayList<VillagerEntity> villagerEntities = new ArrayList<>();
                 vmss.list().forEach((vmsselement) -> {
                     clusters.list().forEach(cluster -> {
                         String vmsselementRGName = vmsselement.resourceGroupName().toUpperCase();
                         String clusterRGName = cluster.nodeResourceGroup().toUpperCase();
 
-                        if (vmsselementRGName.equals(clusterRGName)){
-                            VillagerEntity villagerEntity = EntityType.VILLAGER.create(world);
-                            villagerEntity.setPosition(player.getX(), player.getY(), player.getZ());
-                            villagerEntity.setCustomName(Text.literal(cluster.name()));
-                            world.spawnEntity(villagerEntity);
-                            villagerEntities.add(villagerEntity);
+                        if (vmsselementRGName.equals(clusterRGName)) {
+                            cluster.agentPools().forEach((s, agentpool) -> {
+                                if (!vmsselement.name().contains(agentpool.name())) return;
 
-                            vmsselement.virtualMachines().list().forEach((instance) -> {
-                                DyeColor sheepPowerState = Utils.updateVmProvisioningStateSheepColor(instance.powerState());
+                                String powerState = "(" + agentpool.count() + "/" + agentpool.nodeSize() + ")";
+                                if (agentpool.powerState().code().equals(Code.STOPPED)) {
+                                    powerState = "(0/" + agentpool.count() + ") STOPPED";
+                                }
 
-                                AzureSheep sheep = new AzureSheep(Aksmanager.AZURE_SHEEP_ENTITY_TYPE, world);
-                                sheep.updatePosition(player.getX(), player.getY(), player.getZ());
-                                sheep.setColor(sheepPowerState);
-                                sheep.setCustomName(Text.literal(instance.computerName()));
-                                sheep.attachLeash(villagerEntity, true);
-                                sheep.setVirtualMachineScaleSetVM(instance);
-                                world.spawnEntity(sheep);
+                                VillagerEntity villagerEntity = EntityType.VILLAGER.create(world);
+                                villagerEntity.setPosition(player.getX(), player.getY(), player.getZ());
+                                villagerEntity.setCustomName(Text.literal(cluster.name() + " ")
+                                        .append(agentpool.name() + " " + powerState));
+
+                                world.spawnEntity(villagerEntity);
+                                villagerEntities.add(villagerEntity);
+                                vmsselement.virtualMachines().list().forEach((instance) -> {
+                                    AzureSheep sheep = new AzureSheep(Aksmanager.AZURE_SHEEP_ENTITY_TYPE, world);
+                                    sheep.updatePosition(player.getX(), player.getY(), player.getZ());
+                                    sheep.setCustomName(Text.literal(instance.computerName()));
+                                    sheep.attachLeash(villagerEntity, true);
+                                    sheep.setVirtualMachineScaleSetVM(instance);
+                                    sheep.setAgentPool(agentpool);
+                                    world.spawnEntity(sheep);
+                                });
                             });
                         }
                     });

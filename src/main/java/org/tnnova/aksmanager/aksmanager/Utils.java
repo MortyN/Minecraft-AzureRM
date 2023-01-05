@@ -14,6 +14,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -122,22 +123,6 @@ public class Utils {
 
         tessellator.draw();
 
-    }
-
-    public static DyeColor updateVmProvisioningStateSheepColor(PowerState powerState){
-        DyeColor dyeColor = DyeColor.GRAY;
-        powerState.toString();
-
-        if (PowerState.RUNNING.equals(powerState)) {
-            dyeColor = DyeColor.GREEN;
-        } else if (PowerState.STARTING.equals(powerState)) {
-            dyeColor = DyeColor.ORANGE;
-        } else if (PowerState.STOPPING.equals(powerState)) {
-            dyeColor = DyeColor.PURPLE;
-        } else if (PowerState.STOPPED.equals(powerState)) {
-            dyeColor = DyeColor.RED;
-        }
-        return dyeColor;
     }
 
     public static DeviceCodeCredential getDeviceCodeCredentialWithMsg(PlayerEntity player) {
