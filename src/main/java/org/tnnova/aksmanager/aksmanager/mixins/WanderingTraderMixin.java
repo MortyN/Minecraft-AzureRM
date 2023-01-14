@@ -79,22 +79,13 @@ public abstract class WanderingTraderMixin {
                                     powerState = "(0/" + agentpool.count() + ") STOPPED";
                                 }
 
-                                AzureVillager villagerEntity = new AzureVillager(Aksmanager.AZURE_VILLAGER_ENTITY_TYPE, world);
-                                villagerEntity.setPosition(player.getX(), player.getY(), player.getZ());
-                                villagerEntity.setCustomName(Text.literal(cluster.name() + " ")
+                                AzureVillager azureVillager = new AzureVillager(Aksmanager.AZURE_VILLAGER_ENTITY_TYPE, world);
+                                azureVillager.setPosition(player.getX(), player.getY(), player.getZ());
+                                azureVillager.setCustomName(Text.literal(cluster.name() + " ")
                                         .append(agentpool.name() + " " + powerState));
-                                villagerEntity.setKubernetesCluster(cluster);
-                                world.spawnEntity(villagerEntity);
-
-                                vmsselement.virtualMachines().list().forEach((instance) -> {
-                                    AzureSheep sheep = new AzureSheep(Aksmanager.AZURE_SHEEP_ENTITY_TYPE, world);
-                                    sheep.updatePosition(player.getX(), player.getY(), player.getZ());
-                                    sheep.setCustomName(Text.literal(instance.computerName()));
-                                    sheep.attachLeash(villagerEntity, true);
-                                    sheep.setVirtualMachineScaleSetVM(instance);
-                                    sheep.setAgentPool(agentpool);
-                                    world.spawnEntity(sheep);
-                                });
+                                azureVillager.setKubernetesCluster(cluster);
+                                azureVillager.setVirtualMachineScaleSetVMs(vmsselement.virtualMachines(), agentpool);
+                                world.spawnEntity(azureVillager);
                             });
                         }
                     });

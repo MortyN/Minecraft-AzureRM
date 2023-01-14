@@ -5,20 +5,19 @@ import com.azure.resourcemanager.containerservice.models.AgentPool;
 import com.azure.resourcemanager.containerservice.models.Code;
 import com.azure.resourcemanager.network.models.LoadBalancer;
 import com.azure.resourcemanager.network.models.Network;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.tnnova.aksmanager.aksmanager.Aksmanager;
 import org.tnnova.aksmanager.aksmanager.AzureModal;
-import org.tnnova.aksmanager.aksmanager.client.AksmanagerClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,12 +30,15 @@ public class AzureSheep extends SheepEntity {
 
     private boolean hasInit = false;
 
+    private AzureVillager owner;
+
     ArrayList<String> vmMetadataStringList;
 
     public AzureSheep(EntityType<? extends SheepEntity> entityType, World worldIn) {
         super(entityType, worldIn);
         setColor(DyeColor.GRAY);
     }
+
 
 
     @Override
@@ -104,6 +106,10 @@ if (PowerState.RUNNING.equals(powerState)) {
         this.agentPool = agentPool;
     }
 
+    public void setOwner(AzureVillager owner) {
+        this.owner = owner;
+    }
+
     public void setVirtualMachineScaleSetVM(VirtualMachineScaleSetVM virtualMachineScaleSetVM) {
         vmMetadataStringList = new ArrayList<>();
         vmMetadataStringList.add("VMSS: "+virtualMachineScaleSetVM.parent().name());
@@ -112,10 +118,13 @@ if (PowerState.RUNNING.equals(powerState)) {
         vmMetadataStringList.add("ResourceGroup: "+virtualMachineScaleSetVM.parent().resourceGroupName());
         vmMetadataStringList.add("Region: "+virtualMachineScaleSetVM.parent().regionName());
         try {
+            Network network = virtualMachineScaleSetVM.parent().getPrimaryNetwork();
             LoadBalancer loadBalancer = virtualMachineScaleSetVM.parent().getPrimaryInternalLoadBalancer();
+            vmMetadataStringList.add("VNET: "+network.name());
             loadBalancer.frontends().forEach((str, lb) ->{
-                vmMetadataStringList.add("SubnetId: "+lb.innerModel().subnet().id());
-                vmMetadataStringList.add("ILB: "+lb.innerModel().privateIpAddress());
+                String id = lb.innerModel().subnet().id();
+                vmMetadataStringList.add("   Subnet: "+id.split("/")[10]);
+                vmMetadataStringList.add("      ILB: "+lb.innerModel().privateIpAddress());
             });
 
         }catch (IOException e){
@@ -156,6 +165,12 @@ if (PowerState.RUNNING.equals(powerState)) {
             }
         }
         super.mobTick();
+    }
+
+    @Override
+    protected void onKilledBy(@Nullable LivingEntity adversary) {
+        if (virtualMachineScaleSetVM!=null) owner.respawnKilledSheep(virtualMachineScaleSetVM, agentPool);
+        super.onKilledBy(adversary);
     }
 
     @Override
