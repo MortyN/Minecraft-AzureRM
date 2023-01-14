@@ -126,6 +126,7 @@ public class Utils {
     }
 
     public static DeviceCodeCredential getDeviceCodeCredentialWithMsg(PlayerEntity player) {
+        player.sendMessage(Text.literal("Starting Azure login process..."));
         return new DeviceCodeCredentialBuilder()
                 .challengeConsumer(challenge -> {
                     // Lets the user know about the challenge.

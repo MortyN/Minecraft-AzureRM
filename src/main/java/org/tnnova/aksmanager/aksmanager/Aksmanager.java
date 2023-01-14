@@ -32,6 +32,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
+import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
 
 import java.util.Objects;
@@ -41,6 +42,8 @@ public class Aksmanager implements ModInitializer {
 
     public static final String SUBSCRIPTIONID = "subId";
     public static final String OWNEDBYAKSMANAGER = "ownedbyaksmanager";
+    public static MinecraftClient MC;
+    public static MinecraftClient CLIENTMC;
     private DeviceCodeCredential deviceCodeCredential;
 
     void createPlatformAtPos(MinecraftClient mc, BlockPos blockPos, Integer xAxisLength, Integer zAxisLength) {
@@ -52,19 +55,25 @@ public class Aksmanager implements ModInitializer {
         System.out.printf("X: %d, Y: %d, Z: %d\n", blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 
-
     public static final EntityType<AzureSheep> AZURE_SHEEP_ENTITY_TYPE = Registry.register(
             Registries.ENTITY_TYPE,
             new Identifier("azureentity", "sheep"),
             FabricEntityTypeBuilder.create(SpawnGroup.AMBIENT, AzureSheep::new).dimensions(EntityDimensions.fixed(0.9f, 1.3f)).build()
     );
 
+    public static final EntityType<AzureVillager> AZURE_VILLAGER_ENTITY_TYPE = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier("azureentity", "villager"),
+            FabricEntityTypeBuilder.create(SpawnGroup.AMBIENT, AzureVillager::new).dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build()
+    );
+
     @Override
     public void onInitialize() {
 
-        FabricDefaultAttributeRegistry.register(AZURE_SHEEP_ENTITY_TYPE, AzureSheep.createMobAttributes());
+        MC = MinecraftClient.getInstance();
 
-        MinecraftClient mc = MinecraftClient.getInstance();
+        FabricDefaultAttributeRegistry.register(AZURE_SHEEP_ENTITY_TYPE, AzureSheep.createMobAttributes());
+        FabricDefaultAttributeRegistry.register(AZURE_VILLAGER_ENTITY_TYPE, AzureSheep.createMobAttributes());
 
         AzureMan azureMan = new AzureMan();
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogin")
@@ -81,19 +90,19 @@ public class Aksmanager implements ModInitializer {
 
                     PagedIterable<Subscription> subList = azure.subscriptions().list();
 
-                    World world = mc.getServer().getOverworld();
+                    World world = MC.getServer().getOverworld();
 
                     azureMan.setWorld(world);
 
                     AtomicInteger i = new AtomicInteger();
 
                     BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1, 0, 0);
-                    mc.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
+                    MC.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
 
                     subList.forEach((e) -> {
                         NbtCompound compound = new NbtCompound();
                         compound.putString(Aksmanager.SUBSCRIPTIONID, e.subscriptionId());
-                        Inventory inventory = ((ChestBlockEntity) mc.getServer().getOverworld().getBlockEntity(blockPos));
+                        Inventory inventory = ((ChestBlockEntity) MC.getServer().getOverworld().getBlockEntity(blockPos));
 
                         //Test with: /data get entity @s SelectedItem
                         ItemStack tripWireKey = new ItemStack(Items.TRIPWIRE_HOOK, 1);
@@ -103,7 +112,7 @@ public class Aksmanager implements ModInitializer {
 
                         i.getAndIncrement();
                     });
-                    Utils.spawnAzureMan(mc.getServer().getOverworld(), blockPos.add(0, 1, 0));
+                    Utils.spawnAzureMan(MC.getServer().getOverworld(), blockPos.add(0, 1, 0));
 
                     return 1;
                 })));
@@ -123,7 +132,7 @@ public class Aksmanager implements ModInitializer {
                     Vec3d centerOfPlatform = new Vec3d(playerPos.x + (platformLengthInBlocksX.floatValue() / 2), platformHeightInBlocksY + 1, playerPos.z + (platformLengthInBlocksZ.floatValue() / 2));
 
                     BlockPos platformPosVec3Dd = new BlockPos(player.getX(), platformHeightInBlocksY, player.getZ());
-                    createPlatformAtPos(mc, platformPosVec3Dd, platformLengthInBlocksX, platformLengthInBlocksZ);
+                    createPlatformAtPos(MC, platformPosVec3Dd, platformLengthInBlocksX, platformLengthInBlocksZ);
                     player.teleport(centerOfPlatform.x, centerOfPlatform.y, centerOfPlatform.z);
 
                     return 1;

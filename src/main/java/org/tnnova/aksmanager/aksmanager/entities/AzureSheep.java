@@ -3,6 +3,8 @@ package org.tnnova.aksmanager.aksmanager.entities;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVM;
 import com.azure.resourcemanager.containerservice.models.AgentPool;
 import com.azure.resourcemanager.containerservice.models.Code;
+import com.azure.resourcemanager.network.models.LoadBalancer;
+import com.azure.resourcemanager.network.models.Network;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.SheepEntity;
@@ -14,6 +16,12 @@ import net.minecraft.util.DyeColor;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.tnnova.aksmanager.aksmanager.Aksmanager;
+import org.tnnova.aksmanager.aksmanager.AzureModal;
+import org.tnnova.aksmanager.aksmanager.client.AksmanagerClient;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class AzureSheep extends SheepEntity {
 
@@ -23,9 +31,17 @@ public class AzureSheep extends SheepEntity {
 
     private boolean hasInit = false;
 
+    ArrayList<String> vmMetadataStringList;
+
     public AzureSheep(EntityType<? extends SheepEntity> entityType, World worldIn) {
         super(entityType, worldIn);
         setColor(DyeColor.GRAY);
+    }
+
+
+    @Override
+    protected boolean shouldDropLoot() {
+        return false;
     }
 
     private void updateVmPowerStateSheepColor(AgentPool agentPool) {
@@ -89,6 +105,25 @@ if (PowerState.RUNNING.equals(powerState)) {
     }
 
     public void setVirtualMachineScaleSetVM(VirtualMachineScaleSetVM virtualMachineScaleSetVM) {
+        vmMetadataStringList = new ArrayList<>();
+        vmMetadataStringList.add("VMSS: "+virtualMachineScaleSetVM.parent().name());
+        vmMetadataStringList.add("Node: "+virtualMachineScaleSetVM.computerName());
+        vmMetadataStringList.add("VMSize: "+virtualMachineScaleSetVM.size());
+        vmMetadataStringList.add("ResourceGroup: "+virtualMachineScaleSetVM.parent().resourceGroupName());
+        vmMetadataStringList.add("Region: "+virtualMachineScaleSetVM.parent().regionName());
+        try {
+            LoadBalancer loadBalancer = virtualMachineScaleSetVM.parent().getPrimaryInternalLoadBalancer();
+            loadBalancer.frontends().forEach((str, lb) ->{
+                vmMetadataStringList.add("SubnetId: "+lb.innerModel().subnet().id());
+                vmMetadataStringList.add("ILB: "+lb.innerModel().privateIpAddress());
+            });
+
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        vmMetadataStringList.add("InstanceId: "+virtualMachineScaleSetVM.instanceId());
+        vmMetadataStringList.add("OSDiskSize: "+virtualMachineScaleSetVM.osDiskSizeInGB()+"gb");
+        vmMetadataStringList.add("PowerState: "+virtualMachineScaleSetVM.powerState());
         this.virtualMachineScaleSetVM = virtualMachineScaleSetVM;
     }
 
@@ -114,41 +149,25 @@ if (PowerState.RUNNING.equals(powerState)) {
     }
 
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        if (player.world.isClient()) return super.interactMob(player, hand);
-
-        Thread thread = new Thread(() -> {
-
-            while (true) {
-                this.setColor(DyeColor.RED);
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                this.setColor(DyeColor.YELLOW);
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                this.setColor(DyeColor.GREEN);
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
+    protected void mobTick() {
+        if (!this.world.isClient()){
+            if(virtualMachineScaleSetVM == null){
+                this.kill();
             }
+        }
+        super.mobTick();
+    }
 
-        });
+    @Override
+    public ActionResult interactMob(PlayerEntity player, Hand hand) {
 
-        thread.start();
+        if (player.world.isClient()){
+            Aksmanager.MC.setScreen(new AzureModal(Aksmanager.MC.getInstance().currentScreen));
+            return super.interactMob(player, hand);
+        }else{
+            AzureModal.metadataStringList = vmMetadataStringList;
+            AzureModal.selectedAzureSheep = virtualMachineScaleSetVM;
+        }
 
         return super.interactMob(player, hand);
     }

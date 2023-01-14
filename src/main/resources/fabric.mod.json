@@ -13,6 +13,10 @@
     {
       "name": "azure_sheep",
       "factory": "org.tnnova.aksmanager.aksmanager.entities.AzureSheep"
+    },
+    {
+      "name": "azure_villager",
+      "factory": "org.tnnova.aksmanager.aksmanager.entities.AzureVillager"
     }
   ],
   "entrypoints": {

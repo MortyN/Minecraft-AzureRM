@@ -1,23 +1,15 @@
 package org.tnnova.aksmanager.aksmanager.mixins;
 
-import com.azure.resourcemanager.compute.models.PowerState;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSets;
 import com.azure.resourcemanager.containerservice.models.Code;
 import com.azure.resourcemanager.containerservice.models.KubernetesClusters;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.visitor.NbtTextFormatter;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,9 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.tnnova.aksmanager.aksmanager.Aksmanager;
 import org.tnnova.aksmanager.aksmanager.Utils;
 import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
+import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
-
-import java.util.ArrayList;
 
 @Mixin(WanderingTraderEntity.class)
 public abstract class WanderingTraderMixin {
@@ -50,16 +41,23 @@ public abstract class WanderingTraderMixin {
 
     @Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
     public void interactMob(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> ci) {
-        if (!player.world.isClient()) return;
-        MinecraftClient mc = MinecraftClient.getInstance();
-        World world = mc.getServer().getOverworld();
+        if (!player.world.isClient()){
+            if (player.getStackInHand(hand).getItem() == Items.TRIPWIRE_HOOK) {
+                ci.setReturnValue(ActionResult.PASS);
+            }
+            return;
+        }
+
+        World world = Aksmanager.MC.getServer().getOverworld();
 
         ItemStack itemStack = player.getStackInHand(hand);
 
         if (itemStack.getItem() == Items.TRIPWIRE_HOOK) {
             NbtCompound nbtCompound = itemStack.getNbt();
+            if (nbtCompound == null) return;
+
             String subId = nbtCompound.getString("subId");
-            player.sendMessage(Text.literal(subId));
+            player.sendMessage(Text.literal("Retrieving all clusters for subscription: " + itemStack.getName().getString()));
 
             Thread thread = new Thread(() -> {
                 VirtualMachineScaleSets vmss = AzureMan.azureResourceManager.withSubscription(subId).virtualMachineScaleSets();
@@ -67,7 +65,6 @@ public abstract class WanderingTraderMixin {
                 AzureMan.setKubernetesClusters(clusters);
                 AzureMan.setVirtualMachineScaleSets(vmss);
 
-                ArrayList<VillagerEntity> villagerEntities = new ArrayList<>();
                 vmss.list().forEach((vmsselement) -> {
                     clusters.list().forEach(cluster -> {
                         String vmsselementRGName = vmsselement.resourceGroupName().toUpperCase();
@@ -82,13 +79,13 @@ public abstract class WanderingTraderMixin {
                                     powerState = "(0/" + agentpool.count() + ") STOPPED";
                                 }
 
-                                VillagerEntity villagerEntity = EntityType.VILLAGER.create(world);
+                                AzureVillager villagerEntity = new AzureVillager(Aksmanager.AZURE_VILLAGER_ENTITY_TYPE, world);
                                 villagerEntity.setPosition(player.getX(), player.getY(), player.getZ());
                                 villagerEntity.setCustomName(Text.literal(cluster.name() + " ")
                                         .append(agentpool.name() + " " + powerState));
-
+                                villagerEntity.setKubernetesCluster(cluster);
                                 world.spawnEntity(villagerEntity);
-                                villagerEntities.add(villagerEntity);
+
                                 vmsselement.virtualMachines().list().forEach((instance) -> {
                                     AzureSheep sheep = new AzureSheep(Aksmanager.AZURE_SHEEP_ENTITY_TYPE, world);
                                     sheep.updatePosition(player.getX(), player.getY(), player.getZ());
