@@ -46,7 +46,7 @@ public class AzureSheep extends SheepEntity {
         return false;
     }
 
-    private void updateVmPowerStateSheepColor(AgentPool agentPool) {
+    private void updateVmPowerStateSheepColor(AgentPool agentPool, String provisioningState) {
         DyeColor dyeColor = DyeColor.GRAY;
         NbtCompound nbtCompound = new NbtCompound();
         if (agentPool == null) {
@@ -54,10 +54,17 @@ public class AzureSheep extends SheepEntity {
             writeCustomDataToNbt(nbtCompound);
             return;
         }
+
+        if(provisioningState.equals("Updating")){
+            dyeColor = DyeColor.ORANGE;
+            writeCustomDataToNbt(nbtCompound);
+            setColor(dyeColor);
+            return;
+        }
         Code code = agentPool.powerState().code();
         if (Code.RUNNING.equals(code)) {
             dyeColor = DyeColor.GREEN;
-        } else if (Code.STOPPED.equals(code)) {
+        }else if (Code.STOPPED.equals(code)) {
             dyeColor = DyeColor.RED;
         }
 
@@ -92,7 +99,7 @@ if (PowerState.RUNNING.equals(powerState)) {
         Thread thread = new Thread(() -> {
             while (true) {
                 try {
-                    updateVmPowerStateSheepColor(agentPool);
+                    updateVmPowerStateSheepColor(agentPool, virtualMachineScaleSetVM.innerModel().provisioningState());
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -115,24 +122,26 @@ if (PowerState.RUNNING.equals(powerState)) {
         vmMetadataStringList.add("VMSS: "+virtualMachineScaleSetVM.parent().name());
         vmMetadataStringList.add("Node: "+virtualMachineScaleSetVM.computerName());
         vmMetadataStringList.add("VMSize: "+virtualMachineScaleSetVM.size());
+        vmMetadataStringList.add("PowerState: "+virtualMachineScaleSetVM.powerState());
+        vmMetadataStringList.add("ProvisioningState: "+virtualMachineScaleSetVM.innerModel().provisioningState());
         vmMetadataStringList.add("ResourceGroup: "+virtualMachineScaleSetVM.parent().resourceGroupName());
         vmMetadataStringList.add("Region: "+virtualMachineScaleSetVM.parent().regionName());
         try {
             Network network = virtualMachineScaleSetVM.parent().getPrimaryNetwork();
             LoadBalancer loadBalancer = virtualMachineScaleSetVM.parent().getPrimaryInternalLoadBalancer();
             vmMetadataStringList.add("VNET: "+network.name());
-            loadBalancer.frontends().forEach((str, lb) ->{
-                String id = lb.innerModel().subnet().id();
-                vmMetadataStringList.add("   Subnet: "+id.split("/")[10]);
-                vmMetadataStringList.add("      ILB: "+lb.innerModel().privateIpAddress());
-            });
-
+            if (loadBalancer != null){
+                loadBalancer.frontends().forEach((str, lb) ->{
+                    String id = lb.innerModel().subnet().id();
+                    vmMetadataStringList.add("   Subnet: "+id.split("/")[10]);
+                    vmMetadataStringList.add("      ILB: "+lb.innerModel().privateIpAddress());
+                });
+            }
         }catch (IOException e){
             System.out.println(e.getMessage());
         }
         vmMetadataStringList.add("InstanceId: "+virtualMachineScaleSetVM.instanceId());
         vmMetadataStringList.add("OSDiskSize: "+virtualMachineScaleSetVM.osDiskSizeInGB()+"gb");
-        vmMetadataStringList.add("PowerState: "+virtualMachineScaleSetVM.powerState());
         this.virtualMachineScaleSetVM = virtualMachineScaleSetVM;
     }
 
@@ -169,7 +178,7 @@ if (PowerState.RUNNING.equals(powerState)) {
 
     @Override
     protected void onKilledBy(@Nullable LivingEntity adversary) {
-        if (virtualMachineScaleSetVM!=null) owner.respawnKilledSheep(virtualMachineScaleSetVM, agentPool);
+        if (virtualMachineScaleSetVM!=null) owner.respawnKilledSheep(virtualMachineScaleSetVM, agentPool, adversary);
         super.onKilledBy(adversary);
     }
 

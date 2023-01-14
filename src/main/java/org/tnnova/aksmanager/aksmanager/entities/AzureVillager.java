@@ -1,9 +1,12 @@
 package org.tnnova.aksmanager.aksmanager.entities;
 
+import com.azure.resourcemanager.compute.models.ApiError;
+import com.azure.resourcemanager.compute.models.ApiErrorException;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVM;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVMs;
 import com.azure.resourcemanager.containerservice.models.AgentPool;
 import com.azure.resourcemanager.containerservice.models.KubernetesCluster;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -66,8 +69,16 @@ public class AzureVillager extends VillagerEntity {
         super.mobTick();
     }
 
-    public void respawnKilledSheep(VirtualMachineScaleSetVM instance, AgentPool agentPool){
+    public void respawnKilledSheep(VirtualMachineScaleSetVM instance, AgentPool agentPool, Entity killedBy){
+
+        Thread.UncaughtExceptionHandler h = (th, ex) -> {
+            killedBy.sendMessage(Text.literal("Exception"+ ex));
+        };
+        Thread t = new Thread(instance::redeploy);
+        t.setUncaughtExceptionHandler(h);
+        t.start();
         provisionAzureSheep(instance, agentPool);
+
     }
 
     @Override
