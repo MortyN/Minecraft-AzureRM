@@ -94,6 +94,10 @@ if (PowerState.RUNNING.equals(powerState)) {
         return super.isSheared();
     }
 
+    public VirtualMachineScaleSetVM getVirtualMachineScaleSetVM() {
+        return virtualMachineScaleSetVM;
+    }
+
     private void startUpdateLoop() {
         //boolean = !row.agentPool.some(a => a.powerState.code === "Stopped" || a.provisioningState === undefined || a.provisioningState === "Starting" || a.provisioningState === "Stopping"
         Thread thread = new Thread(() -> {

@@ -6,8 +6,13 @@ import com.azure.core.management.profile.AzureProfile;
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Subscription;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import io.netty.channel.ChannelHandler;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.EntityDimensions;
@@ -25,16 +30,20 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import org.tnnova.aksmanager.aksmanager.client.AksmanagerClient;
 import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
 import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,6 +54,8 @@ public class Aksmanager implements ModInitializer {
     public static MinecraftClient MC;
     public static MinecraftClient CLIENTMC;
     private DeviceCodeCredential deviceCodeCredential;
+
+    public static ArrayList<AzureVillager> azureVillagers;
 
     void createPlatformAtPos(MinecraftClient mc, BlockPos blockPos, Integer xAxisLength, Integer zAxisLength) {
         for (int i = 0; i < xAxisLength; i++) {
@@ -67,8 +78,25 @@ public class Aksmanager implements ModInitializer {
             FabricEntityTypeBuilder.create(SpawnGroup.AMBIENT, AzureVillager::new).dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build()
     );
 
+
     @Override
     public void onInitialize() {
+
+        azureVillagers = new ArrayList<>();
+
+        ServerPlayNetworking.registerGlobalReceiver(AksmanagerClient.TARGET_ENTITY_CHILDREN_ID, (server, player, handler, buf, responseSender) -> {
+            String str = buf.readString();
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create();
+            String jsonString = gson.toJson(azureVillagers);
+
+            PacketByteBuf packetByteBuf = PacketByteBufs.create();
+            packetByteBuf.writeString(jsonString);
+
+            ServerPlayNetworking.send((ServerPlayerEntity) player, AksmanagerClient.TARGET_ENTITY_CHILDREN_ID, packetByteBuf);
+            System.out.println("PAKKE FOR FAEN: "+str);
+        });
 
         MC = MinecraftClient.getInstance();
 

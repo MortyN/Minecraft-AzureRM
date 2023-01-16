@@ -7,8 +7,10 @@ import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVMs;
 import com.azure.resourcemanager.containerservice.models.AgentPool;
 import com.azure.resourcemanager.containerservice.models.KubernetesCluster;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityInteraction;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
@@ -27,9 +29,11 @@ public class AzureVillager extends VillagerEntity {
     private VirtualMachineScaleSetVMs virtualMachineScaleSetVMs;
     private ArrayList<String> k8sMetadataStringList;
 
+    private ArrayList<AzureSheep> entityChildren;
 
     public AzureVillager(EntityType<? extends VillagerEntity> entityType, World world) {
         super(entityType, world);
+        entityChildren = new ArrayList<>();
     }
 
 
@@ -51,7 +55,13 @@ public class AzureVillager extends VillagerEntity {
         sheep.setVirtualMachineScaleSetVM(instance);
         sheep.setAgentPool(agentPool);
         sheep.setOwner(this);
+        entityChildren.add(sheep);
+
         world.spawnEntity(sheep);
+    }
+
+    public ArrayList<AzureSheep> getEntityChildren() {
+        return entityChildren;
     }
 
     public void setVirtualMachineScaleSetVMs(VirtualMachineScaleSetVMs virtualMachineScaleSetVMs, AgentPool agentPool) {
@@ -59,7 +69,7 @@ public class AzureVillager extends VillagerEntity {
         this.virtualMachineScaleSetVMs = virtualMachineScaleSetVMs;
     }
 
-    @Override
+/*    @Override
     protected void mobTick() {
         if (!this.world.isClient()){
             if(kubernetesCluster == null){
@@ -67,7 +77,7 @@ public class AzureVillager extends VillagerEntity {
             }
         }
         super.mobTick();
-    }
+    }*/
 
     public void respawnKilledSheep(VirtualMachineScaleSetVM instance, AgentPool agentPool, Entity killedBy){
 

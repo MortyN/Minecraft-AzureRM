@@ -85,6 +85,7 @@ public abstract class WanderingTraderMixin {
                                         .append(agentpool.name() + " " + powerState));
                                 azureVillager.setKubernetesCluster(cluster);
                                 azureVillager.setVirtualMachineScaleSetVMs(vmsselement.virtualMachines(), agentpool);
+                                Aksmanager.azureVillagers.add(azureVillager);
                                 world.spawnEntity(azureVillager);
                             });
                         }
