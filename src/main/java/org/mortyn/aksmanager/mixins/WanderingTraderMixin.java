@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager.mixins;
+package org.mortyn.aksmanager.mixins;
 
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSets;
 import com.azure.resourcemanager.containerservice.models.Code;
@@ -12,17 +12,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
+import org.mortyn.aksmanager.Aksmanager;
+import org.mortyn.aksmanager.utils.Utils;
+import org.mortyn.aksmanager.entities.AzureVillager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.tnnova.aksmanager.aksmanager.Aksmanager;
-import org.tnnova.aksmanager.aksmanager.Utils;
-import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
-import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
-import org.tnnova.aksmanager.aksmanager.models.AzureMan;
+import org.mortyn.aksmanager.models.AzureMan;
 
 @Mixin(WanderingTraderEntity.class)
 public abstract class WanderingTraderMixin {

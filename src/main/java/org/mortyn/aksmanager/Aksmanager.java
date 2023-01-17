@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager;
+package org.mortyn.aksmanager;
 
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.management.AzureEnvironment;
@@ -6,12 +6,8 @@ import com.azure.core.management.profile.AzureProfile;
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Subscription;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import io.netty.channel.ChannelHandler;
 import net.fabricmc.api.ModInitializer;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
@@ -26,22 +22,19 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
-import org.tnnova.aksmanager.aksmanager.client.AksmanagerClient;
-import org.tnnova.aksmanager.aksmanager.entities.AzureSheep;
-import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
-import org.tnnova.aksmanager.aksmanager.models.AzureMan;
+import org.mortyn.aksmanager.entities.AzureSheep;
+import org.mortyn.aksmanager.entities.AzureVillager;
+import org.mortyn.aksmanager.models.AzureMan;
+import org.mortyn.aksmanager.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,15 +51,6 @@ public class Aksmanager implements ModInitializer {
 
     public static ArrayList<AzureVillager> azureVillagers;
 
-    void createPlatformAtPos(MinecraftClient mc, BlockPos blockPos, Integer xAxisLength, Integer zAxisLength) {
-        for (int i = 0; i < xAxisLength; i++) {
-            for (int j = 0; j < zAxisLength; j++) {
-                mc.getServer().getOverworld().setBlockState(blockPos, Blocks.COBBLESTONE.getDefaultState(), Block.NOTIFY_LISTENERS);
-            }
-        }
-        System.out.printf("X: %d, Y: %d, Z: %d\n", blockPos.getX(), blockPos.getY(), blockPos.getZ());
-    }
-
     public static final EntityType<AzureSheep> AZURE_SHEEP_ENTITY_TYPE = Registry.register(
             Registries.ENTITY_TYPE,
             new Identifier("azureentity", "sheep"),
@@ -79,7 +63,6 @@ public class Aksmanager implements ModInitializer {
             FabricEntityTypeBuilder.create(SpawnGroup.AMBIENT, AzureVillager::new).dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build()
     );
 
-
     public static HashMap<String, AzureSheep> azureSheepHashMap;
 
     public static ArrayList<String> markedAzureSheep;
@@ -88,27 +71,26 @@ public class Aksmanager implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        azureSheepHashMap = new HashMap<>();
-        azureVillagers = new ArrayList<>();
 
         MC = MinecraftClient.getInstance();
+
+        FabricDefaultAttributeRegistry.register(AZURE_SHEEP_ENTITY_TYPE, AzureSheep.createMobAttributes());
+        FabricDefaultAttributeRegistry.register(AZURE_VILLAGER_ENTITY_TYPE, AzureSheep.createMobAttributes());
+
+        azureSheepHashMap = new HashMap<>();
+        azureVillagers = new ArrayList<>();
 
         ServerPlayNetworking.registerGlobalReceiver(TARGETED_AZURE_VILLAGER, (server, player, handler, buf, responseSender) -> {
             String targetedVillagerName = buf.readString();
             markedAzureSheep = new ArrayList<>();
             azureSheepHashMap.forEach((uuid, entity) -> {
-                AzureSheep azureSheep = (AzureSheep) entity;
+                AzureSheep azureSheep = entity;
                 String sheepOwnerName = azureSheep.getOwnerName();
                 if (Objects.equals(sheepOwnerName, targetedVillagerName)){
                     markedAzureSheep.add(azureSheep.getEntityName());
                 }
             });
         });
-
-
-
-        FabricDefaultAttributeRegistry.register(AZURE_SHEEP_ENTITY_TYPE, AzureSheep.createMobAttributes());
-        FabricDefaultAttributeRegistry.register(AZURE_VILLAGER_ENTITY_TYPE, AzureSheep.createMobAttributes());
 
         AzureMan azureMan = new AzureMan();
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogin")
@@ -151,27 +133,5 @@ public class Aksmanager implements ModInitializer {
 
                     return 1;
                 })));
-
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("createplatform")
-                .executes(context -> {
-                    // For versions below 1.19, replace "Text.literal" with "new LiteralText".
-
-                    PlayerEntity player = Objects.requireNonNull(context.getSource().getPlayer(), "Player not found");
-
-                    Vec3d playerPos = player.getPos();
-
-                    Integer platformLengthInBlocksX = 40;
-                    Integer platformHeightInBlocksY = 200;
-                    Integer platformLengthInBlocksZ = 200;
-
-                    Vec3d centerOfPlatform = new Vec3d(playerPos.x + (platformLengthInBlocksX.floatValue() / 2), platformHeightInBlocksY + 1, playerPos.z + (platformLengthInBlocksZ.floatValue() / 2));
-
-                    BlockPos platformPosVec3Dd = new BlockPos(player.getX(), platformHeightInBlocksY, player.getZ());
-                    createPlatformAtPos(MC, platformPosVec3Dd, platformLengthInBlocksX, platformLengthInBlocksZ);
-                    player.teleport(centerOfPlatform.x, centerOfPlatform.y, centerOfPlatform.z);
-
-                    return 1;
-                })));
-
     }
 }

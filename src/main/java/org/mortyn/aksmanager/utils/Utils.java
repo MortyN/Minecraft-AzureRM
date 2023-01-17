@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager;
+package org.mortyn.aksmanager.utils;
 
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;

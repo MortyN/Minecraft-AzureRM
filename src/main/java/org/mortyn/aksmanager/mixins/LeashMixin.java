@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager.mixins;
+package org.mortyn.aksmanager.mixins;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;

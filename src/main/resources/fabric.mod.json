@@ -12,19 +12,19 @@
   "entities": [
     {
       "name": "azure_sheep",
-      "factory": "org.tnnova.aksmanager.aksmanager.entities.AzureSheep"
+      "factory": "org.mortyn.aksmanager.entities.AzureSheep"
     },
     {
       "name": "azure_villager",
-      "factory": "org.tnnova.aksmanager.aksmanager.entities.AzureVillager"
+      "factory": "org.mortyn.aksmanager.entities.AzureVillager"
     }
   ],
   "entrypoints": {
     "client": [
-      "org.tnnova.aksmanager.aksmanager.client.AksmanagerClient"
+      "org.mortyn.aksmanager.client.AksmanagerClient"
     ],
     "main": [
-      "org.tnnova.aksmanager.aksmanager.Aksmanager"
+      "org.mortyn.aksmanager.Aksmanager"
     ]
   },
   "mixins": [

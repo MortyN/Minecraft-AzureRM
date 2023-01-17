@@ -1,8 +1,10 @@
-package org.tnnova.aksmanager.aksmanager.mixins;
+package org.mortyn.aksmanager.mixins;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.passive.WanderingTraderEntity;
 import net.minecraft.text.Text;
+import org.mortyn.aksmanager.utils.Utils;
+import org.mortyn.aksmanager.entities.AzureVillager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,13 +17,6 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.scoreboard.AbstractTeam;
-import org.tnnova.aksmanager.aksmanager.Utils;
-import org.tnnova.aksmanager.aksmanager.client.AksmanagerClient;
-import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
-import org.tnnova.aksmanager.aksmanager.enums.Color;
 
 import java.util.Objects;
 

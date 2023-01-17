@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager.entities;
+package org.mortyn.aksmanager.entities;
 
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVM;
 import com.azure.resourcemanager.containerservice.models.AgentPool;
@@ -16,8 +16,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.tnnova.aksmanager.aksmanager.Aksmanager;
-import org.tnnova.aksmanager.aksmanager.AzureModal;
+import org.mortyn.aksmanager.Aksmanager;
+import org.mortyn.aksmanager.screens.AzureModal;
 
 import java.io.IOException;
 import java.util.ArrayList;

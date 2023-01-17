@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager.entities;
+package org.mortyn.aksmanager.entities;
 
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVM;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVMs;
@@ -13,8 +13,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
-import org.tnnova.aksmanager.aksmanager.Aksmanager;
-import org.tnnova.aksmanager.aksmanager.AzureModal;
+import org.mortyn.aksmanager.Aksmanager;
+import org.mortyn.aksmanager.screens.AzureModal;
 
 import java.util.ArrayList;
 

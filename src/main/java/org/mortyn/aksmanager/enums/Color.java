@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager.enums;
+package org.mortyn.aksmanager.enums;
 
 import net.minecraft.entity.SpawnGroup;
 

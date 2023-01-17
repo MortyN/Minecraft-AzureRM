@@ -1,4 +1,4 @@
-package org.tnnova.aksmanager.aksmanager;
+package org.mortyn.aksmanager.screens;
 
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSet;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVM;

@@ -1,14 +1,9 @@
-package org.tnnova.aksmanager.aksmanager.models;
+package org.mortyn.aksmanager.models;
 
-import com.azure.identity.DeviceCodeCredential;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSets;
-import com.azure.resourcemanager.containerservice.models.KubernetesCluster;
 import com.azure.resourcemanager.containerservice.models.KubernetesClusters;
 import com.azure.resourcemanager.resources.models.Subscription;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class AzureMan {
