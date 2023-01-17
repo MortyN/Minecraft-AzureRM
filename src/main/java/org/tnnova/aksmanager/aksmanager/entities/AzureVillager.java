@@ -1,23 +1,18 @@
 package org.tnnova.aksmanager.aksmanager.entities;
 
-import com.azure.resourcemanager.compute.models.ApiError;
-import com.azure.resourcemanager.compute.models.ApiErrorException;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVM;
 import com.azure.resourcemanager.compute.models.VirtualMachineScaleSetVMs;
 import com.azure.resourcemanager.containerservice.models.AgentPool;
 import com.azure.resourcemanager.containerservice.models.KubernetesCluster;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityInteraction;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.tnnova.aksmanager.aksmanager.Aksmanager;
 import org.tnnova.aksmanager.aksmanager.AzureModal;
 
@@ -54,9 +49,9 @@ public class AzureVillager extends VillagerEntity {
         sheep.attachLeash(this, true);
         sheep.setVirtualMachineScaleSetVM(instance);
         sheep.setAgentPool(agentPool);
-        sheep.setOwner(this);
+        sheep.setOwnerEntity(this);
+        sheep.setOwnerEntityName(this.getEntityName());
         entityChildren.add(sheep);
-
         world.spawnEntity(sheep);
     }
 
@@ -69,7 +64,12 @@ public class AzureVillager extends VillagerEntity {
         this.virtualMachineScaleSetVMs = virtualMachineScaleSetVMs;
     }
 
-/*    @Override
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+    }
+
+    /*    @Override
     protected void mobTick() {
         if (!this.world.isClient()){
             if(kubernetesCluster == null){
@@ -84,9 +84,9 @@ public class AzureVillager extends VillagerEntity {
         Thread.UncaughtExceptionHandler h = (th, ex) -> {
             killedBy.sendMessage(Text.literal("Exception"+ ex));
         };
-        Thread t = new Thread(instance::redeploy);
+/*        Thread t = new Thread(instance::redeploy);*//**//*
         t.setUncaughtExceptionHandler(h);
-        t.start();
+        t.start();*/
         provisionAzureSheep(instance, agentPool);
 
     }

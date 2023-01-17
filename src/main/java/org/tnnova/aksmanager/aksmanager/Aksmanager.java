@@ -44,6 +44,7 @@ import org.tnnova.aksmanager.aksmanager.entities.AzureVillager;
 import org.tnnova.aksmanager.aksmanager.models.AzureMan;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -79,26 +80,32 @@ public class Aksmanager implements ModInitializer {
     );
 
 
+    public static HashMap<String, AzureSheep> azureSheepHashMap;
+
+    public static ArrayList<String> markedAzureSheep;
+
+    public static Identifier TARGETED_AZURE_VILLAGER = new Identifier("azureentity", "targetedvillager");
+
     @Override
     public void onInitialize() {
-
+        azureSheepHashMap = new HashMap<>();
         azureVillagers = new ArrayList<>();
 
-        ServerPlayNetworking.registerGlobalReceiver(AksmanagerClient.TARGET_ENTITY_CHILDREN_ID, (server, player, handler, buf, responseSender) -> {
-            String str = buf.readString();
-            Gson gson = new GsonBuilder()
-                    .setPrettyPrinting()
-                    .create();
-            String jsonString = gson.toJson(azureVillagers);
+        MC = MinecraftClient.getInstance();
 
-            PacketByteBuf packetByteBuf = PacketByteBufs.create();
-            packetByteBuf.writeString(jsonString);
-
-            ServerPlayNetworking.send((ServerPlayerEntity) player, AksmanagerClient.TARGET_ENTITY_CHILDREN_ID, packetByteBuf);
-            System.out.println("PAKKE FOR FAEN: "+str);
+        ServerPlayNetworking.registerGlobalReceiver(TARGETED_AZURE_VILLAGER, (server, player, handler, buf, responseSender) -> {
+            String targetedVillagerName = buf.readString();
+            markedAzureSheep = new ArrayList<>();
+            azureSheepHashMap.forEach((uuid, entity) -> {
+                AzureSheep azureSheep = (AzureSheep) entity;
+                String sheepOwnerName = azureSheep.getOwnerName();
+                if (Objects.equals(sheepOwnerName, targetedVillagerName)){
+                    markedAzureSheep.add(azureSheep.getEntityName());
+                }
+            });
         });
 
-        MC = MinecraftClient.getInstance();
+
 
         FabricDefaultAttributeRegistry.register(AZURE_SHEEP_ENTITY_TYPE, AzureSheep.createMobAttributes());
         FabricDefaultAttributeRegistry.register(AZURE_VILLAGER_ENTITY_TYPE, AzureSheep.createMobAttributes());

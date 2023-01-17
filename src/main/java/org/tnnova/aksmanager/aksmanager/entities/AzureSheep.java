@@ -34,8 +34,13 @@ public class AzureSheep extends SheepEntity {
 
     ArrayList<String> vmMetadataStringList;
 
+    private String ownerEntityName;
+
     public AzureSheep(EntityType<? extends SheepEntity> entityType, World worldIn) {
         super(entityType, worldIn);
+        if (!this.world.isClient){
+            Aksmanager.azureSheepHashMap.put(this.getEntityName(), this);
+        }
         setColor(DyeColor.GRAY);
     }
 
@@ -117,8 +122,16 @@ if (PowerState.RUNNING.equals(powerState)) {
         this.agentPool = agentPool;
     }
 
-    public void setOwner(AzureVillager owner) {
+    public void setOwnerEntity(AzureVillager owner) {
         this.owner = owner;
+    }
+
+    public void setOwnerEntityName(String ownerEntityName){
+        this.ownerEntityName = ownerEntityName;
+    }
+
+    public String getOwnerName(){
+        return ownerEntityName;
     }
 
     public void setVirtualMachineScaleSetVM(VirtualMachineScaleSetVM virtualMachineScaleSetVM) {
@@ -186,9 +199,10 @@ if (PowerState.RUNNING.equals(powerState)) {
         super.onKilledBy(adversary);
     }
 
+
+
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
-
         if (player.world.isClient()){
             Aksmanager.MC.setScreen(new AzureModal(Aksmanager.MC.getInstance().currentScreen));
             return super.interactMob(player, hand);

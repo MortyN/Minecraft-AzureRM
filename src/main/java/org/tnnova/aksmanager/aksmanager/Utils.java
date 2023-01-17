@@ -38,9 +38,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Utils {
-    public static WanderingTraderEntity spawnAzureMan(World world, BlockPos pos) {
 
-        String AZUREMAN = "Azure Man";
+    public static final String AZUREMAN = "Azure Man";
+    public static WanderingTraderEntity spawnAzureMan(World world, BlockPos pos) {
 
         WanderingTraderEntity wanderingTraderEntity = EntityType.WANDERING_TRADER.create(world);
         wanderingTraderEntity.setPosition(pos.getX(), pos.getY(), pos.getZ());
