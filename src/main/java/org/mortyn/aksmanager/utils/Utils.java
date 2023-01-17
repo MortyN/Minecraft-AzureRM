@@ -7,6 +7,8 @@ import com.azure.identity.DeviceCodeCredential;
 import com.azure.identity.DeviceCodeCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.compute.models.PowerState;
+import com.azure.resourcemanager.containerservice.models.AgentPool;
+import com.azure.resourcemanager.containerservice.models.Code;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -18,6 +20,7 @@ import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.visitor.NbtTextFormatter;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Scoreboard;
@@ -33,6 +36,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.Matrix4f;
+import org.mortyn.aksmanager.entities.AzureSheep;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -40,6 +44,35 @@ import java.util.ArrayList;
 public class Utils {
 
     public static final String AZUREMAN = "Azure Man";
+
+    public static void updateVmPowerStateSheepColor(AzureSheep sheep, Code instancePowerCode, String provisioningState) {
+        DyeColor dyeColor = DyeColor.GRAY;
+        
+        if(provisioningState.equals("Updating")){
+            dyeColor = DyeColor.ORANGE;
+            sheep.setColor(dyeColor);
+            return;
+        }
+        if (Code.RUNNING.equals(instancePowerCode)) {
+            dyeColor = DyeColor.GREEN;
+        }else if (Code.STOPPED.equals(instancePowerCode)) {
+            dyeColor = DyeColor.RED;
+        }
+
+/*        PowerState powerState = virtualMachineScaleSetVM.powerState();
+if (PowerState.RUNNING.equals(powerState)) {
+            dyeColor = DyeColor.GREEN;
+        } else if (PowerState.STARTING.equals(powerState)) {
+            dyeColor = DyeColor.ORANGE;
+        } else if (PowerState.STOPPING.equals(powerState)) {
+            dyeColor = DyeColor.PURPLE;
+        } else if (PowerState.STOPPED.equals(powerState)) {
+            dyeColor = DyeColor.RED;
+        }*/
+
+        sheep.setColor(dyeColor);
+
+    }
     public static WanderingTraderEntity spawnAzureMan(World world, BlockPos pos) {
 
         WanderingTraderEntity wanderingTraderEntity = EntityType.WANDERING_TRADER.create(world);

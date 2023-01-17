@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.mortyn.aksmanager.models.AzureMan;
+import org.mortyn.aksmanager.utils.AzureAuthUtils;
 
 @Mixin(WanderingTraderEntity.class)
 public abstract class WanderingTraderMixin {
@@ -59,10 +59,8 @@ public abstract class WanderingTraderMixin {
             player.sendMessage(Text.literal("Retrieving all clusters for subscription: " + itemStack.getName().getString()));
 
             Thread thread = new Thread(() -> {
-                VirtualMachineScaleSets vmss = AzureMan.azureResourceManager.withSubscription(subId).virtualMachineScaleSets();
-                KubernetesClusters clusters = AzureMan.azureResourceManager.withSubscription(subId).kubernetesClusters();
-                AzureMan.setKubernetesClusters(clusters);
-                AzureMan.setVirtualMachineScaleSets(vmss);
+                VirtualMachineScaleSets vmss = AzureAuthUtils.azureResourceManager.withSubscription(subId).virtualMachineScaleSets();
+                KubernetesClusters clusters = AzureAuthUtils.azureResourceManager.withSubscription(subId).kubernetesClusters();
 
                 vmss.list().forEach((vmsselement) -> {
                     clusters.list().forEach(cluster -> {
@@ -93,8 +91,8 @@ public abstract class WanderingTraderMixin {
 
             });
 
-            if (AzureMan.azureResourceManager == null) {
-                AzureMan.azureResourceManager = Utils.getAzureAuth(player);
+            if (AzureAuthUtils.azureResourceManager == null) {
+                AzureAuthUtils.azureResourceManager = Utils.getAzureAuth(player);
             }
 
             thread.start();

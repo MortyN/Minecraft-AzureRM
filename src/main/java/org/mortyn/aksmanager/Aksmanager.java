@@ -30,10 +30,9 @@ import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
-import net.minecraft.world.World;
 import org.mortyn.aksmanager.entities.AzureSheep;
 import org.mortyn.aksmanager.entities.AzureVillager;
-import org.mortyn.aksmanager.models.AzureMan;
+import org.mortyn.aksmanager.utils.AzureAuthUtils;
 import org.mortyn.aksmanager.utils.Utils;
 
 import java.util.ArrayList;
@@ -92,7 +91,6 @@ public class Aksmanager implements ModInitializer {
             });
         });
 
-        AzureMan azureMan = new AzureMan();
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("azlogin")
                 .executes(context -> {
 
@@ -103,13 +101,9 @@ public class Aksmanager implements ModInitializer {
                     AzureResourceManager.Authenticated azure = AzureResourceManager
                             .authenticate(deviceCodeCredential, profile);
 
-                    azureMan.setAzureResourceManager(azure);
+                    AzureAuthUtils.azureResourceManager = azure;
 
                     PagedIterable<Subscription> subList = azure.subscriptions().list();
-
-                    World world = MC.getServer().getOverworld();
-
-                    azureMan.setWorld(world);
 
                     AtomicInteger i = new AtomicInteger();
 

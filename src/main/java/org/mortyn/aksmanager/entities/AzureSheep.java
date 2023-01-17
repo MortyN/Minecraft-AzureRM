@@ -17,7 +17,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.mortyn.aksmanager.Aksmanager;
+import org.mortyn.aksmanager.client.AksmanagerClient;
 import org.mortyn.aksmanager.screens.AzureModal;
+import org.mortyn.aksmanager.utils.Utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class AzureSheep extends SheepEntity {
         if (!this.world.isClient){
             Aksmanager.azureSheepHashMap.put(this.getEntityName(), this);
         }
-        setColor(DyeColor.GRAY);
+        setColor(DyeColor.GREEN);
     }
 
 
@@ -51,71 +53,14 @@ public class AzureSheep extends SheepEntity {
         return false;
     }
 
-    private void updateVmPowerStateSheepColor(AgentPool agentPool, String provisioningState) {
-        DyeColor dyeColor = DyeColor.GRAY;
-        NbtCompound nbtCompound = new NbtCompound();
-        if (agentPool == null) {
-            setColor(dyeColor);
-            writeCustomDataToNbt(nbtCompound);
-            return;
-        }
-
-        if(provisioningState.equals("Updating")){
-            dyeColor = DyeColor.ORANGE;
-            writeCustomDataToNbt(nbtCompound);
-            setColor(dyeColor);
-            return;
-        }
-        Code code = agentPool.powerState().code();
-        if (Code.RUNNING.equals(code)) {
-            dyeColor = DyeColor.GREEN;
-        }else if (Code.STOPPED.equals(code)) {
-            dyeColor = DyeColor.RED;
-        }
-
-/*        PowerState powerState = virtualMachineScaleSetVM.powerState();
-if (PowerState.RUNNING.equals(powerState)) {
-            dyeColor = DyeColor.GREEN;
-        } else if (PowerState.STARTING.equals(powerState)) {
-            dyeColor = DyeColor.ORANGE;
-        } else if (PowerState.STOPPING.equals(powerState)) {
-            dyeColor = DyeColor.PURPLE;
-        } else if (PowerState.STOPPED.equals(powerState)) {
-            dyeColor = DyeColor.RED;
-        }*/
-
-        writeCustomDataToNbt(nbtCompound);
-        setColor(dyeColor);
-
-    }
-
     @Override
     public boolean isSheared() {
         if (this.world.isClient()) return super.isSheared();
-        if (!hasInit){
-            startUpdateLoop();
-            hasInit = true;
-        }
         return super.isSheared();
     }
 
     public VirtualMachineScaleSetVM getVirtualMachineScaleSetVM() {
         return virtualMachineScaleSetVM;
-    }
-
-    private void startUpdateLoop() {
-        //boolean = !row.agentPool.some(a => a.powerState.code === "Stopped" || a.provisioningState === undefined || a.provisioningState === "Starting" || a.provisioningState === "Stopping"
-        Thread thread = new Thread(() -> {
-            while (true) {
-                try {
-                    updateVmPowerStateSheepColor(agentPool, virtualMachineScaleSetVM.innerModel().provisioningState());
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        thread.start();
     }
 
     public void setAgentPool(AgentPool agentPool) {
