@@ -1,10 +1,13 @@
 package org.mortyn.aksmanager;
 
+import com.azure.core.credential.TokenCredential;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.containerservice.models.KubernetesCluster;
+import com.azure.resourcemanager.containerservice.models.KubernetesClusters;
 import com.azure.resourcemanager.resources.models.Subscription;
 import net.fabricmc.api.ModInitializer;
 
@@ -41,6 +44,20 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Aksmanager implements ModInitializer {
+
+    private class KubernetesClusterWithSubscription {
+        Subscription subscription;
+        KubernetesCluster kubernetesCluster;
+
+        public KubernetesCluster getKubernetesCluster() {
+            return kubernetesCluster;
+        }
+
+        public KubernetesClusterWithSubscription(Subscription subscription, KubernetesCluster kubernetesCluster){
+            this.subscription = subscription;
+            this.kubernetesCluster = kubernetesCluster;
+        }
+    }
 
     public static final String SUBSCRIPTIONID = "subId";
     public static final String OWNEDBYAKSMANAGER = "ownedbyaksmanager";
@@ -95,7 +112,6 @@ public class Aksmanager implements ModInitializer {
                 .executes(context -> {
 
                     deviceCodeCredential = Utils.getDeviceCodeCredentialWithMsg(context.getSource().getPlayer());
-
                     AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
                     //<T>.Authenticated is to get non subscription scoped resources, such as subscriptions themselves without providing withSubscriptionId
                     AzureResourceManager.Authenticated azure = AzureResourceManager
@@ -110,19 +126,34 @@ public class Aksmanager implements ModInitializer {
                     BlockPos blockPos = context.getSource().getPlayer().getBlockPos().add(1, 0, 0);
                     MC.getServer().getOverworld().setBlockState(blockPos, Blocks.CHEST.getDefaultState(), Block.NOTIFY_LISTENERS);
 
-                    subList.forEach((e) -> {
+                    ArrayList<KubernetesClusterWithSubscription> clusters = new ArrayList<>();
+
+                    subList.forEach((sub) -> {
+                        KubernetesClusters cs = azure.withSubscription(sub.subscriptionId()).kubernetesClusters();
+                        cs.list().forEach((c) -> {
+                            clusters.add(new KubernetesClusterWithSubscription(sub, c));
+                        });
+                    });
+
+                    clusters.forEach((c) -> {
+
+                        if (i.get() > 20) {
+                            return;
+                        }
+
                         NbtCompound compound = new NbtCompound();
-                        compound.putString(Aksmanager.SUBSCRIPTIONID, e.subscriptionId());
+                        compound.putString(Aksmanager.SUBSCRIPTIONID, c.subscription.subscriptionId());
                         Inventory inventory = ((ChestBlockEntity) MC.getServer().getOverworld().getBlockEntity(blockPos));
 
                         //Test with: /data get entity @s SelectedItem
                         ItemStack tripWireKey = new ItemStack(Items.TRIPWIRE_HOOK, 1);
                         tripWireKey.setNbt(compound);
-                        tripWireKey.setCustomName(Text.literal(e.displayName()));
+                        tripWireKey.setCustomName(Text.literal(c.kubernetesCluster.name()));
                         inventory.setStack(i.intValue(), tripWireKey);
 
                         i.getAndIncrement();
                     });
+                    
                     Utils.spawnAzureMan(MC.getServer().getOverworld(), blockPos.add(0, 1, 0));
 
                     return 1;

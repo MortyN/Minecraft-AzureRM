@@ -1,8 +1,11 @@
 package org.mortyn.aksmanager.utils;
 
+import com.azure.core.credential.TokenCredential;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
 import com.azure.core.util.ExpandableStringEnum;
+import com.azure.identity.AzureCliCredential;
+import com.azure.identity.ChainedTokenCredentialBuilder;
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.identity.DeviceCodeCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
